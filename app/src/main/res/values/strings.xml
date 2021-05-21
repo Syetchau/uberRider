@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">KotlinUberRider</string>
+    <string name="sign_in_with_phone">Sign In with Phone</string>
+    <string name="sign_in_with_google">Sign In with Google</string>
+    <string name="txt_continue">Continue</string>
+    <string name="txt_welcome_to_reg">Let\'s start with creating your account</string>
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+    <string name="hint_phone_number">Phone Number</string>
+    <string name="title_activity_rider_home">RiderHomeActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_exit">Sign out</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="permission_required">Permission Location Required</string>
+    <string name="drivers_not_found">Drivers not found</string>
+    <string name="key_not_found">Key not found</string>
+    <string name="welcome">Good Afternoon</string>
+    <string name="choose_a_saved_place">choose a saved place</string>
+    <string name="city_name_not_found">City name not found</string>
+</resources>
