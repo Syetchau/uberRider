@@ -151,4 +151,17 @@ object Common {
             }
         }
     }
+
+    fun formatDuration(duration: String): CharSequence? {
+        return if (duration.contains("mins")) {
+            duration.substring(0, duration.length-1)
+        } else {
+            duration
+        }
+    }
+
+    fun formatAddress(startAddress: String): CharSequence? {
+        val firstIndexComma = startAddress.indexOf(",")
+        return startAddress.substring(0,firstIndexComma)
+    }
 }

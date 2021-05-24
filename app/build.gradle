@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.kotlinuberrider"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -61,6 +61,7 @@ dependencies {
     //Map, places
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.google.android.libraries.places:places:2.4.0'
+    implementation 'com.google.maps.android:android-maps-utils:2.2.3'
     implementation 'com.android.volley:volley:1.2.0'
 
     //GeoFire
@@ -87,4 +88,7 @@ dependencies {
 
     //SlidingPanel
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
+
+    //EventBus
+    implementation 'org.greenrobot:eventbus:3.2.0'
 }

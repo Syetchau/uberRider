@@ -3,6 +3,7 @@ package com.example.kotlinuberrider.ui.home
 import android.Manifest
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Address
@@ -28,10 +29,12 @@ import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.Animation
 import com.example.kotlinuberrider.Model.DriverGeo
 import com.example.kotlinuberrider.Model.DriverInfo
+import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Model.GeoQuery
 import com.example.kotlinuberrider.R
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
+import com.example.kotlinuberrider.RequestDriverActivity
 import com.example.kotlinuberrider.databinding.FragmentHomeBinding
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
@@ -60,6 +63,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
@@ -174,7 +178,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
 
         //enable zoom
         mMap.uiSettings.isZoomControlsEnabled = true
-
         try {
             val success = googleMap.setMapStyle(
                 MapStyleOptions.
@@ -271,11 +274,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                 Place.Field.NAME))
         autoCompleteSupportFragment.setOnPlaceSelectedListener(object: PlaceSelectionListener{
             override fun onPlaceSelected(place: Place) {
-                Snackbar.make(requireView(), ""+place.latLng, Snackbar.LENGTH_SHORT).show()
+                if (ActivityCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Snackbar.make(requireView(), getString(R.string.permission_required),
+                        Snackbar.LENGTH_SHORT).show()
+                    return
+                }
+                fusedLocationProviderClient
+                    .lastLocation
+                    .addOnSuccessListener {
+                        val origin = LatLng(it.latitude, it.longitude)
+                        val destination = LatLng(place.latLng!!.latitude, place.latLng!!.longitude)
+                        startActivity(Intent(requireContext(), RequestDriverActivity::class.java))
+                        EventBus.getDefault().postSticky(SelectedPlaceEvent(origin, destination))
+                    }
             }
 
             override fun onError(status: Status) {
-                Snackbar.make(requireView(), status.statusMessage!!, Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireView(), ""+status.statusMessage!!, Snackbar.LENGTH_SHORT).show()
             }
         })
 
