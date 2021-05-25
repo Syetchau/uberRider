@@ -68,7 +68,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 
-
 class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener {
 
     private lateinit var homeViewModel: HomeViewModel
@@ -389,7 +388,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                         geoQuery.removeAllListeners()
                         geoQuery.addGeoQueryEventListener(object : GeoQueryEventListener {
                             override fun onKeyEntered(key: String?, location: GeoLocation?) {
-                                Common.driversFound.add(DriverGeo(key, location))
+                                //Common.driversFound.add(DriverGeo(key, location))
+                                if(!Common.driversFound.containsKey(key)){
+                                    Common.driversFound[key!!] = DriverGeo(key, location)
+                                }
                             }
 
                             override fun onKeyExited(key: String?) {
@@ -476,11 +478,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
 
     private fun addDriverMaker() {
         if(Common.driversFound.size > 0) {
-            Observable.fromIterable(Common.driversFound)
+            Observable.fromIterable(Common.driversFound.keys)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ driverGeo: DriverGeo? ->
-                    findDriverByKey(driverGeo)
+                .subscribe({ key: String? ->
+                    findDriverByKey(Common.driversFound[key!!])
                 },{
                     Snackbar.make(requireView(), it!!.message!!,
                         Snackbar.LENGTH_SHORT).show()
@@ -498,7 +500,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
             .addListenerForSingleValueEvent(object: ValueEventListener{
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.hasChildren()){
-                        driverGeo.driverInfo = snapshot.getValue(DriverInfo::class.java)
+                        driverGeo.driverInfo = (snapshot.getValue(DriverInfo::class.java))
+                        //Log.d("driverGeoKey", driverGeo.key!!)
+                        Common.driversFound[driverGeo.key!!]!!.driverInfo =
+                            (snapshot.getValue(DriverInfo::class.java))
                         firebaseDriverInfoListener.onDriverInfoLoadSuccess(driverGeo)
                     } else{
                         firebaseFailedListener.onFirebaseFailed(getString(R.string.key_not_found)+

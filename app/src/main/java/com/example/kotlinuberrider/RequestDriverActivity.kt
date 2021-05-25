@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -35,6 +36,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
 import java.io.IOException
+import java.lang.StringBuilder
 
 class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -364,5 +366,37 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             ))
         }
         spinningAnimator!!.start()
+        findNearbyDriver(target)
+    }
+
+    private fun findNearbyDriver(target: LatLng) {
+        if (Common.driversFound.size > 0) {
+            var min = 0f
+            //default found driver is first driver
+            var foundDriver = Common.driversFound[Common.driversFound.keys.iterator().next()]
+            val currentRiderLocation = Location("")
+            currentRiderLocation.latitude = target.latitude
+            currentRiderLocation.longitude = target.longitude
+
+            for (key in Common.driversFound.keys){
+                val driverLocation = Location("")
+                driverLocation.latitude = Common.driversFound[key]!!.geoLocation!!.latitude
+                driverLocation.longitude = Common.driversFound[key]!!.geoLocation!!.longitude
+
+                //init min value && found driver if first driver in list
+                if (min == 0f) {
+                    min = driverLocation.distanceTo(currentRiderLocation)
+                    foundDriver = Common.driversFound[key]
+                } else if (driverLocation.distanceTo(currentRiderLocation) < min){
+                    min = driverLocation.distanceTo(currentRiderLocation)
+                    foundDriver = Common.driversFound[key]
+                }
+            }
+            Snackbar.make(binding.rlRequestDriver, StringBuilder("Found Driver: ")
+                .append(foundDriver!!.driverInfo!!.phoneNumber),Snackbar.LENGTH_LONG).show()
+        } else {
+            Snackbar.make(binding.rlRequestDriver, getString(R.string.drivers_not_found)
+                ,Snackbar.LENGTH_LONG).show()
+        }
     }
 }

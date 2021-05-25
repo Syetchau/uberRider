@@ -29,7 +29,7 @@ object Common {
     val driversSubscribe: MutableMap<String, Animation> = HashMap()
     val markerList: HashMap<String, Marker> = HashMap()
     var currentRider: RiderInfo?= null
-    val driversFound: MutableSet<DriverGeo> = HashSet()
+    val driversFound: MutableMap<String, DriverGeo> = HashMap()
 
     const val RIDER_INFO_REFERENCE: String = "RiderInfo"
     const val DRIVER_INFO_REFERENCE: String = "DriverInfo"
