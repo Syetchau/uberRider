@@ -37,6 +37,8 @@ object Common {
     const val TOKEN_REFERENCE: String = "Token"
     const val NOTIFICATION_TITLE: String = "title"
     const val NOTIFICATION_BODY: String = "body"
+    const val PICKUP_LOCATION: String = "PickupLocation"
+    const val REQUEST_DRIVER_TITLE: String = "RequestDriver"
 
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")

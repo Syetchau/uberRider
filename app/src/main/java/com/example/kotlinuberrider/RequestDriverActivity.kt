@@ -16,6 +16,7 @@ import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
+import com.example.kotlinuberrider.Utils.UserUtils
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -392,8 +393,9 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                     foundDriver = Common.driversFound[key]
                 }
             }
-            Snackbar.make(binding.rlRequestDriver, StringBuilder("Found Driver: ")
-                .append(foundDriver!!.driverInfo!!.phoneNumber),Snackbar.LENGTH_LONG).show()
+            //Snackbar.make(binding.rlRequestDriver, StringBuilder("Found Driver: ")
+                //.append(foundDriver!!.driverInfo!!.phoneNumber),Snackbar.LENGTH_LONG).show()
+            UserUtils.sendRequestToDriver(this, binding.rlRequestDriver, foundDriver, target)
         } else {
             Snackbar.make(binding.rlRequestDriver, getString(R.string.drivers_not_found)
                 ,Snackbar.LENGTH_LONG).show()
