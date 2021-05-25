@@ -1,5 +1,6 @@
 package com.example.kotlinuberrider.Common
 
+import android.animation.ValueAnimator
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,7 +24,6 @@ import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.math.abs
 import kotlin.math.atan
-
 
 object Common {
     val driversSubscribe: MutableMap<String, Animation> = HashMap()
@@ -163,5 +163,15 @@ object Common {
     fun formatAddress(startAddress: String): CharSequence? {
         val firstIndexComma = startAddress.indexOf(",")
         return startAddress.substring(0,firstIndexComma)
+    }
+
+    fun valueAnimate(duration: Int, listener: ValueAnimator.AnimatorUpdateListener): ValueAnimator {
+        val valueAnimator = ValueAnimator.ofFloat(0f, 100f)
+        valueAnimator.duration = duration.toLong()
+        valueAnimator.addUpdateListener(listener)
+        valueAnimator.repeatCount = ValueAnimator.INFINITE
+        valueAnimator.repeatMode = ValueAnimator.RESTART
+        valueAnimator.start()
+        return valueAnimator
     }
 }

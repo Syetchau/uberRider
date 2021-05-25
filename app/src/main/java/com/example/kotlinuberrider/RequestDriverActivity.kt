@@ -1,21 +1,16 @@
 package com.example.kotlinuberrider
 
-import android.Manifest
 import android.animation.ValueAnimator
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.LinearInterpolator
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Remote.GoogleApi
@@ -28,6 +23,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.example.kotlinuberrider.databinding.ActivityRequestDriverBinding
 import com.example.kotlinuberrider.databinding.LayoutConfirmPickupBinding
 import com.example.kotlinuberrider.databinding.LayoutConfirmUberBinding
+import com.example.kotlinuberrider.databinding.LayoutFindingDriverBinding
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import com.google.maps.android.ui.IconGenerator
@@ -38,7 +34,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import org.w3c.dom.Text
 import java.io.IOException
 
 class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -47,6 +42,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityRequestDriverBinding
     private lateinit var confirmUberBinding: LayoutConfirmUberBinding
     private lateinit var confirmPickupBinding: LayoutConfirmPickupBinding
+    private lateinit var findingDriverBinding: LayoutFindingDriverBinding
     private var selectedPlaceEvent: SelectedPlaceEvent?= null
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var tvDuration: TextView
@@ -62,6 +58,16 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     private var polylineList: ArrayList<LatLng>?= null
     private var originMarker: Marker?= null
     private var destinationMarker: Marker?= null
+
+    //animation effect
+    private var lastUserCircle: Circle?= null
+    private val duration = 1000
+    private var lastPulseAnimator: ValueAnimator?= null
+
+    //spinning animation
+    private var spinningAnimator: ValueAnimator?= null
+    private val desiredNumberOfSpins = 5
+    private val desiredSecondsPerOnePull360Spin = 40
 
     override fun onStart() {
         if (!EventBus.getDefault().isRegistered(true)){
@@ -79,12 +85,20 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onStop()
     }
 
+    override fun onDestroy() {
+        if (spinningAnimator != null){
+            spinningAnimator!!.end()
+        }
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityRequestDriverBinding.inflate(layoutInflater)
         confirmUberBinding = binding.layoutConfirmUber
         confirmPickupBinding = binding.layoutConfirmPickup
+        findingDriverBinding = binding.layoutFindingDriver
         setContentView(binding.root)
         initData()
 
@@ -151,6 +165,24 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             confirmUberBinding.cvConfirmUber.visibility = View.GONE
 
             setDataPickup()
+        }
+
+        confirmPickupBinding.btnConfirmPickup.setOnClickListener {
+            if (mMap == null) {
+                return@setOnClickListener
+            }
+            if(selectedPlaceEvent == null) {
+                return@setOnClickListener
+            }
+            mMap.clear()
+            //rotate camera
+            val cameraPos = CameraPosition.Builder()
+                .target(selectedPlaceEvent!!.origin)
+                .tilt(45f)
+                .zoom(16f)
+                .build()
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos))
+            startMarkerWithPulseAnimation()
         }
     }
 
@@ -273,5 +305,64 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         originMarker = mMap.addMarker(MarkerOptions()
             .icon(BitmapDescriptorFactory.fromBitmap(icon))
             .position(selectedPlaceEvent!!.origin))
+    }
+
+    private fun startMarkerWithPulseAnimation() {
+        binding.layoutConfirmPickup.cvConfirmPickup.visibility = View.GONE
+        binding.viewFillMap.visibility = View.VISIBLE
+        binding.layoutFindingDriver.cvFindingDriver.visibility = View.VISIBLE
+
+        originMarker = mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker())
+            .position(selectedPlaceEvent!!.origin))
+
+        addPulsatingEffect(selectedPlaceEvent!!.origin)
+    }
+
+    private fun addPulsatingEffect(origin: LatLng) {
+        if(lastPulseAnimator != null) {
+            lastPulseAnimator!!.cancel()
+        }
+        if (lastUserCircle != null) {
+            lastUserCircle!!.center = origin
+        }
+        lastPulseAnimator = Common.valueAnimate(duration, object:ValueAnimator.AnimatorUpdateListener{
+            override fun onAnimationUpdate(animation: ValueAnimator?) {
+                if (lastUserCircle != null) {
+                    lastUserCircle!!.radius = animation!!.animatedValue.toString().toDouble()
+                } else{
+                    lastUserCircle = mMap.addCircle(CircleOptions()
+                        .center(origin)
+                        .radius(animation!!.animatedValue.toString().toDouble())
+                        .strokeColor(Color.WHITE)
+                        .fillColor(ContextCompat.getColor(this@RequestDriverActivity,
+                            R.color.map_darker))
+                    )
+                }
+            }
+        })
+        //rotate camera
+        startMapCameraSpinningAnimation(mMap.cameraPosition.target)
+    }
+
+    private fun startMapCameraSpinningAnimation(target: LatLng) {
+        if (spinningAnimator != null) {
+            spinningAnimator!!.cancel()
+        }
+        spinningAnimator = ValueAnimator.ofFloat(0f, (desiredNumberOfSpins * 360).toFloat())
+        spinningAnimator!!.duration = (desiredSecondsPerOnePull360Spin * 1000).toLong()
+        spinningAnimator!!.interpolator = LinearInterpolator()
+        spinningAnimator!!.startDelay = 100
+        spinningAnimator!!.addUpdateListener {
+            val newBearingValue = it.animatedValue as Float
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(
+                CameraPosition.Builder()
+                    .target(target)
+                    .zoom(16f)
+                    .tilt(45f)
+                    .bearing(newBearingValue)
+                    .build()
+            ))
+        }
+        spinningAnimator!!.start()
     }
 }

@@ -32,4 +32,5 @@
     <string name="address">Address</string>
     <string name="confirm_pickup">Confirm pickup</string>
     <string name="meet_driver_here">Meet driver here</string>
+    <string name="finding_your_driver">Finding your driver</string>
 </resources>
