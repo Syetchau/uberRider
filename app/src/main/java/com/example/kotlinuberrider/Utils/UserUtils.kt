@@ -76,6 +76,7 @@ object UserUtils {
                         notificationData[Common.NOTIFICATION_TITLE] = Common.REQUEST_DRIVER_TITLE
                         notificationData[Common.NOTIFICATION_BODY] = "This message represent for Request Driver action"
                         notificationData[Common.PICKUP_LOCATION] = locationString
+                        notificationData[Common.RIDER_KEY] = FirebaseAuth.getInstance().currentUser!!.uid
                         val fcmData = FCMSendData(tokenModel!!.token, notificationData)
                         compositeDisposable.add(fcmService.sendNotification(fcmData)!!
                             .subscribeOn(Schedulers.newThread())

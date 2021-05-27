@@ -38,6 +38,7 @@ object Common {
     const val NOTIFICATION_TITLE: String = "title"
     const val NOTIFICATION_BODY: String = "body"
     const val PICKUP_LOCATION: String = "PickupLocation"
+    const val RIDER_KEY: String = "RiderKey"
     const val REQUEST_DRIVER_TITLE: String = "RequestDriver"
 
     fun buildWelcomeMessage(): String {
