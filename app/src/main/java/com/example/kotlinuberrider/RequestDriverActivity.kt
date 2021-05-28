@@ -13,6 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.example.kotlinuberrider.Common.Common
+import com.example.kotlinuberrider.Model.DeclineRequestFromDriverEvent
+import com.example.kotlinuberrider.Model.DriverGeo
 import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
@@ -37,7 +39,6 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
 import java.io.IOException
-import java.lang.StringBuilder
 
 class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -72,8 +73,10 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     private val desiredNumberOfSpins = 5
     private val desiredSecondsPerOnePull360Spin = 40
 
+    private var lastDriverCall: DriverGeo?= null
+
     override fun onStart() {
-        if (!EventBus.getDefault().isRegistered(true)){
+        if (!EventBus.getDefault().isRegistered(this)){
             EventBus.getDefault().register(this)
         }
         super.onStart()
@@ -83,6 +86,9 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         compositeDisposable.clear()
         if (EventBus.getDefault().hasSubscriberForEvent(SelectedPlaceEvent::class.java)){
             EventBus.getDefault().removeStickyEvent(SelectedPlaceEvent::class.java)
+        }
+        if (EventBus.getDefault().hasSubscriberForEvent(DeclineRequestFromDriverEvent::class.java)){
+            EventBus.getDefault().removeStickyEvent(DeclineRequestFromDriverEvent::class.java)
         }
         EventBus.getDefault().unregister(this)
         super.onStop()
@@ -156,8 +162,15 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onSelectedPlaceEvent(event: SelectedPlaceEvent) {
-//        Log.d("event", event.toString())
         selectedPlaceEvent = event
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onDeclineReceivedEvent(event: DeclineRequestFromDriverEvent) {
+        if (lastDriverCall != null) {
+            Common.driversFound[lastDriverCall!!.key]!!.isDecline = true
+            findNearbyDriver(selectedPlaceEvent!!.origin)
+        }
     }
 
     private fun initData() {
@@ -374,7 +387,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         if (Common.driversFound.size > 0) {
             var min = 0f
             //default found driver is first driver
-            var foundDriver = Common.driversFound[Common.driversFound.keys.iterator().next()]
+            var foundDriver: DriverGeo?= null
             val currentRiderLocation = Location("")
             currentRiderLocation.latitude = target.latitude
             currentRiderLocation.longitude = target.longitude
@@ -387,18 +400,36 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                 //init min value && found driver if first driver in list
                 if (min == 0f) {
                     min = driverLocation.distanceTo(currentRiderLocation)
-                    foundDriver = Common.driversFound[key]
+                    if (!Common.driversFound[key]!!.isDecline!!){
+                        foundDriver = Common.driversFound[key]
+                        break //exit loop as we found driver
+                    } else {
+                        continue //if decline already,skip n continue
+                    }
                 } else if (driverLocation.distanceTo(currentRiderLocation) < min){
                     min = driverLocation.distanceTo(currentRiderLocation)
-                    foundDriver = Common.driversFound[key]
+                    if (!Common.driversFound[key]!!.isDecline!!){
+                        foundDriver = Common.driversFound[key]
+                        break //exit loop as we found driver
+                    } else {
+                        continue //if decline already,skip n continue
+                    }
                 }
             }
-            //Snackbar.make(binding.rlRequestDriver, StringBuilder("Found Driver: ")
-                //.append(foundDriver!!.driverInfo!!.phoneNumber),Snackbar.LENGTH_LONG).show()
-            UserUtils.sendRequestToDriver(this, binding.rlRequestDriver, foundDriver, target)
+            if (foundDriver != null) {
+                UserUtils.sendRequestToDriver(this, binding.rlRequestDriver, foundDriver, target)
+                lastDriverCall = foundDriver
+            } else {
+                Toast.makeText(this, getString(R.string.no_driver_accept),
+                    Toast.LENGTH_SHORT).show()
+                lastDriverCall = null
+                finish()
+            }
         } else {
             Snackbar.make(binding.rlRequestDriver, getString(R.string.drivers_not_found)
                 ,Snackbar.LENGTH_LONG).show()
+            lastDriverCall = null
+            finish()
         }
     }
 }

@@ -40,6 +40,7 @@ object Common {
     const val PICKUP_LOCATION: String = "PickupLocation"
     const val RIDER_KEY: String = "RiderKey"
     const val REQUEST_DRIVER_TITLE: String = "RequestDriver"
+    const val REQUEST_DRIVER_DECLINE: String = "Decline"
 
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")

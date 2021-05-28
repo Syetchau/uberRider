@@ -232,7 +232,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                                 marker!!.remove()
                                 Common.markerList.remove(driverGeoModel.key)
                                 Common.driversSubscribe.remove(driverGeoModel.key)
-                                driverLocation.removeEventListener(this)
+                                if (Common.driversFound != null &&
+                                    Common.driversFound[driverGeoModel.key] != null) {
+                                        Common.driversFound.remove(driverGeoModel.key)
+                                        driverLocation.removeEventListener(this)
+                                }
                             }
                         } else{
                             if (Common.markerList[driverGeoModel.key!!] != null) {

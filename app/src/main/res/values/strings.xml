@@ -35,4 +35,5 @@
     <string name="finding_your_driver">Finding your driver</string>
     <string name="token_not_found">Token not found</string>
     <string name="send_req_driver_failed">Send request driver failed</string>
+    <string name="no_driver_accept">No driver accept</string>
 </resources>

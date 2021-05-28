@@ -1,11 +1,12 @@
 package com.example.kotlinuberrider.Service
 
-import android.util.Log
 import com.example.kotlinuberrider.Common.Common
+import com.example.kotlinuberrider.Model.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Utils.UserUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.greenrobot.eventbus.EventBus
 import kotlin.random.Random
 
 class MyFirebaseMessagingService: FirebaseMessagingService() {
@@ -21,10 +22,18 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         super.onMessageReceived(remoteMsg)
         val data = remoteMsg.data
         if (data != null) {
-            Common.showNotification(this, Random.nextInt(),
-                data[Common.NOTIFICATION_TITLE],
-                data[Common.NOTIFICATION_BODY],
-                null)
+            if (data[Common.NOTIFICATION_TITLE] != null) {
+                if (data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_DECLINE)) {
+                    EventBus.getDefault().postSticky(DeclineRequestFromDriverEvent())
+                } else {
+                    Common.showNotification(
+                        this, Random.nextInt(),
+                        data[Common.NOTIFICATION_TITLE],
+                        data[Common.NOTIFICATION_BODY],
+                        null
+                    )
+                }
+            }
         }
     }
 }
