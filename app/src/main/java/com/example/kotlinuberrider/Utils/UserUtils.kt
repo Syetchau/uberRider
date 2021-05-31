@@ -6,6 +6,7 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.DriverGeo
+import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Model.FCMSendData
 import com.example.kotlinuberrider.Model.Token
 import com.example.kotlinuberrider.R
@@ -56,7 +57,7 @@ object UserUtils {
     fun sendRequestToDriver(context: Context,
                             rlRequestDriver: RelativeLayout,
                             foundDriver: DriverGeo?,
-                            target: LatLng) {
+                            selectedPlaceEvent: SelectedPlaceEvent) {
         val compositeDisposable = CompositeDisposable()
         val fcmService = RetrofitFCMClient.instance!!.create(FCMService::class.java)
         FirebaseDatabase    //Get token
@@ -67,16 +68,30 @@ object UserUtils {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()){
                         val tokenModel = snapshot.getValue(Token::class.java)
-                        val locationString = StringBuilder()
-                            .append(target.latitude)
-                            .append(",")
-                            .append(target.longitude)
-                            .toString()
                         val notificationData: MutableMap<String, String> = HashMap()
+                        val pickupLocationString = StringBuilder()
+                            .append(selectedPlaceEvent.origin.latitude)
+                            .append(",")
+                            .append(selectedPlaceEvent.origin.longitude)
+                            .toString()
+                        val destinationLocationString = StringBuilder()
+                            .append(selectedPlaceEvent.destination.latitude)
+                            .append(",")
+                            .append(selectedPlaceEvent.destination.longitude)
+                            .toString()
+
                         notificationData[Common.NOTIFICATION_TITLE] = Common.REQUEST_DRIVER_TITLE
                         notificationData[Common.NOTIFICATION_BODY] = "This message represent for Request Driver action"
-                        notificationData[Common.PICKUP_LOCATION] = locationString
                         notificationData[Common.RIDER_KEY] = FirebaseAuth.getInstance().currentUser!!.uid
+
+                        notificationData[Common.PICKUP_LOCATION] = pickupLocationString
+                        notificationData[Common.PICKUP_LOCATION_STRING] =
+                            selectedPlaceEvent.originString
+
+                        notificationData[Common.DESTINATION_LOCATION] = destinationLocationString
+                        notificationData[Common.DESTINATION_LOCATION_STRING] =
+                            selectedPlaceEvent.destinationString
+
                         val fcmData = FCMSendData(tokenModel!!.token, notificationData)
                         compositeDisposable.add(fcmService.sendNotification(fcmData)!!
                             .subscribeOn(Schedulers.newThread())

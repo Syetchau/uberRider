@@ -38,7 +38,10 @@ object Common {
     const val NOTIFICATION_TITLE: String = "title"
     const val NOTIFICATION_BODY: String = "body"
     const val PICKUP_LOCATION: String = "PickupLocation"
+    const val DESTINATION_LOCATION: String = "DestinationLocation"
     const val RIDER_KEY: String = "RiderKey"
+    const val PICKUP_LOCATION_STRING = "PickupLocationString"
+    const val DESTINATION_LOCATION_STRING = "DestinationLocationString"
     const val REQUEST_DRIVER_TITLE: String = "RequestDriver"
     const val REQUEST_DRIVER_DECLINE: String = "Decline"
 

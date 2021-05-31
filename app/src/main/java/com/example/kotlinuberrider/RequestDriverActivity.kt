@@ -169,7 +169,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     fun onDeclineReceivedEvent(event: DeclineRequestFromDriverEvent) {
         if (lastDriverCall != null) {
             Common.driversFound[lastDriverCall!!.key]!!.isDecline = true
-            findNearbyDriver(selectedPlaceEvent!!.origin)
+            findNearbyDriver(selectedPlaceEvent!!)
         }
     }
 
@@ -331,15 +331,15 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         originMarker = mMap.addMarker(MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker())
             .position(selectedPlaceEvent!!.origin))
 
-        addPulsatingEffect(selectedPlaceEvent!!.origin)
+        addPulsatingEffect(selectedPlaceEvent!!)
     }
 
-    private fun addPulsatingEffect(origin: LatLng) {
+    private fun addPulsatingEffect(selectedPlaceEvent: SelectedPlaceEvent) {
         if(lastPulseAnimator != null) {
             lastPulseAnimator!!.cancel()
         }
         if (lastUserCircle != null) {
-            lastUserCircle!!.center = origin
+            lastUserCircle!!.center = selectedPlaceEvent.origin
         }
         lastPulseAnimator = Common.valueAnimate(duration, object:ValueAnimator.AnimatorUpdateListener{
             override fun onAnimationUpdate(animation: ValueAnimator?) {
@@ -347,7 +347,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                     lastUserCircle!!.radius = animation!!.animatedValue.toString().toDouble()
                 } else{
                     lastUserCircle = mMap.addCircle(CircleOptions()
-                        .center(origin)
+                        .center(selectedPlaceEvent.origin)
                         .radius(animation!!.animatedValue.toString().toDouble())
                         .strokeColor(Color.WHITE)
                         .fillColor(ContextCompat.getColor(this@RequestDriverActivity,
@@ -357,10 +357,10 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         })
         //rotate camera
-        startMapCameraSpinningAnimation(mMap.cameraPosition.target)
+        startMapCameraSpinningAnimation(selectedPlaceEvent)
     }
 
-    private fun startMapCameraSpinningAnimation(target: LatLng) {
+    private fun startMapCameraSpinningAnimation(selectedPlaceEvent: SelectedPlaceEvent) {
         if (spinningAnimator != null) {
             spinningAnimator!!.cancel()
         }
@@ -372,7 +372,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             val newBearingValue = it.animatedValue as Float
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(
                 CameraPosition.Builder()
-                    .target(target)
+                    .target(selectedPlaceEvent.origin)
                     .zoom(16f)
                     .tilt(45f)
                     .bearing(newBearingValue)
@@ -380,17 +380,17 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             ))
         }
         spinningAnimator!!.start()
-        findNearbyDriver(target)
+        findNearbyDriver(selectedPlaceEvent)
     }
 
-    private fun findNearbyDriver(target: LatLng) {
+    private fun findNearbyDriver(selectedPlaceEvent: SelectedPlaceEvent) {
         if (Common.driversFound.size > 0) {
             var min = 0f
             //default found driver is first driver
             var foundDriver: DriverGeo?= null
             val currentRiderLocation = Location("")
-            currentRiderLocation.latitude = target.latitude
-            currentRiderLocation.longitude = target.longitude
+            currentRiderLocation.latitude = selectedPlaceEvent.origin.latitude
+            currentRiderLocation.longitude = selectedPlaceEvent.origin.longitude
 
             for (key in Common.driversFound.keys){
                 val driverLocation = Location("")
@@ -417,7 +417,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
             if (foundDriver != null) {
-                UserUtils.sendRequestToDriver(this, binding.rlRequestDriver, foundDriver, target)
+                UserUtils.sendRequestToDriver(this, binding.rlRequestDriver, foundDriver, selectedPlaceEvent!!)
                 lastDriverCall = foundDriver
             } else {
                 Toast.makeText(this, getString(R.string.no_driver_accept),
