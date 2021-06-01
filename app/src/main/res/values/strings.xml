@@ -36,4 +36,10 @@
     <string name="token_not_found">Token not found</string>
     <string name="send_req_driver_failed">Send request driver failed</string>
     <string name="no_driver_accept">No driver accept</string>
+    <string name="trips_not_found">Cannot found trip with key</string>
+    <string name="uber_x">Trueno AE86</string>
+    <string name="car_number">13954</string>
+    <string name="acsii_code">■</string>
+    <string name="language_example">English</string>
+    <string name="pickup_hint">Any pickup notes?</string>
 </resources>

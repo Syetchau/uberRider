@@ -47,6 +47,10 @@
             android:id="@+id/layout_finding_driver"
             layout="@layout/layout_finding_driver"/>
 
+        <include
+            android:id="@+id/layout_driver_info"
+            layout="@layout/layout_driver_info"/>
+
     </FrameLayout>
 
 </RelativeLayout>

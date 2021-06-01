@@ -12,24 +12,28 @@ import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.example.kotlinuberrider.Common.Common
-import com.example.kotlinuberrider.Model.DeclineRequestFromDriverEvent
+import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Model.DriverGeo
+import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
 import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
+import com.example.kotlinuberrider.Model.TripPlan
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
 import com.example.kotlinuberrider.Utils.UserUtils
+import com.example.kotlinuberrider.databinding.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.example.kotlinuberrider.databinding.ActivityRequestDriverBinding
-import com.example.kotlinuberrider.databinding.LayoutConfirmPickupBinding
-import com.example.kotlinuberrider.databinding.LayoutConfirmUberBinding
-import com.example.kotlinuberrider.databinding.LayoutFindingDriverBinding
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.maps.android.ui.IconGenerator
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -47,6 +51,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var confirmUberBinding: LayoutConfirmUberBinding
     private lateinit var confirmPickupBinding: LayoutConfirmPickupBinding
     private lateinit var findingDriverBinding: LayoutFindingDriverBinding
+    private lateinit var driverInfoBinding: LayoutDriverInfoBinding
     private var selectedPlaceEvent: SelectedPlaceEvent?= null
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var tvDuration: TextView
@@ -90,6 +95,9 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         if (EventBus.getDefault().hasSubscriberForEvent(DeclineRequestFromDriverEvent::class.java)){
             EventBus.getDefault().removeStickyEvent(DeclineRequestFromDriverEvent::class.java)
         }
+        if (EventBus.getDefault().hasSubscriberForEvent(DriverAcceptTripEvent::class.java)){
+            EventBus.getDefault().removeStickyEvent(DriverAcceptTripEvent::class.java)
+        }
         EventBus.getDefault().unregister(this)
         super.onStop()
     }
@@ -108,6 +116,8 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         confirmUberBinding = binding.layoutConfirmUber
         confirmPickupBinding = binding.layoutConfirmPickup
         findingDriverBinding = binding.layoutFindingDriver
+        driverInfoBinding = binding.layoutDriverInfo
+
         setContentView(binding.root)
         initData()
 
@@ -171,6 +181,47 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             Common.driversFound[lastDriverCall!!.key]!!.isDecline = true
             findNearbyDriver(selectedPlaceEvent!!)
         }
+    }
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onDriverAcceptTripEvent(event: DriverAcceptTripEvent) {
+        FirebaseDatabase.getInstance()
+            .getReference(Common.TRIP)
+            .child(event.tripId)
+            .addListenerForSingleValueEvent(object: ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()){
+                        val tripPlan = snapshot.getValue(TripPlan::class.java)
+                        mMap.clear()
+                        binding.viewFillMap.visibility = View.GONE
+                        if (spinningAnimator != null) {
+                            spinningAnimator!!.end()
+                        }
+                        val cameraPosition = CameraPosition.Builder()
+                            .target(mMap.cameraPosition.target)
+                            .tilt(0f)
+                            .zoom(mMap.cameraPosition.zoom)
+                            .build()
+                        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+                        //load driver avatar
+                        Glide.with(this@RequestDriverActivity)
+                            .load(tripPlan!!.driverInfo!!.avatar)
+                            .into(driverInfoBinding.circularIvDriver)
+                        driverInfoBinding.tvDriverName.text = tripPlan.driverInfo!!.firstName
+                        confirmPickupBinding.cvConfirmPickup.visibility = View.GONE
+                        confirmUberBinding.cvConfirmUber.visibility = View.GONE
+                        driverInfoBinding.cvDriverInfo.visibility = View.VISIBLE
+
+                    } else {
+                        Snackbar.make(binding.rlRequestDriver, getString(R.string.trips_not_found),
+                            Snackbar.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                   Snackbar.make(binding.rlRequestDriver, error.message, Snackbar.LENGTH_LONG).show()
+                }
+            })
     }
 
     private fun initData() {

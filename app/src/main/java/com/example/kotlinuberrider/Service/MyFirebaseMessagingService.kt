@@ -1,7 +1,8 @@
 package com.example.kotlinuberrider.Service
 
 import com.example.kotlinuberrider.Common.Common
-import com.example.kotlinuberrider.Model.DeclineRequestFromDriverEvent
+import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
+import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
 import com.example.kotlinuberrider.Utils.UserUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -23,15 +24,21 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         val data = remoteMsg.data
         if (data != null) {
             if (data[Common.NOTIFICATION_TITLE] != null) {
-                if (data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_DECLINE)) {
-                    EventBus.getDefault().postSticky(DeclineRequestFromDriverEvent())
-                } else {
-                    Common.showNotification(
-                        this, Random.nextInt(),
-                        data[Common.NOTIFICATION_TITLE],
-                        data[Common.NOTIFICATION_BODY],
-                        null
-                    )
+                when {
+                    data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_DECLINE) -> {
+                        EventBus.getDefault().postSticky(DeclineRequestFromDriverEvent())
+                    }
+                    data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_ACCEPT) -> {
+                        EventBus.getDefault().postSticky(DriverAcceptTripEvent(data[Common.TRIP_KEY]!!))
+                    }
+                    else -> {
+                        Common.showNotification(
+                            this, Random.nextInt(),
+                            data[Common.NOTIFICATION_TITLE],
+                            data[Common.NOTIFICATION_BODY],
+                            null
+                        )
+                    }
                 }
             }
         }
