@@ -7,9 +7,14 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.app.NotificationCompat
 import com.example.kotlinuberrider.Model.Animation
@@ -18,6 +23,7 @@ import com.example.kotlinuberrider.Model.RiderInfo
 import com.example.kotlinuberrider.R
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.maps.android.ui.IconGenerator
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -183,5 +189,19 @@ object Common {
         valueAnimator.repeatMode = ValueAnimator.RESTART
         valueAnimator.start()
         return valueAnimator
+    }
+
+    fun createIconWithDuration(context: Context, duration: String): Bitmap? {
+        val view = LayoutInflater.from(context).inflate(R.layout.pickup_info_with_duration, null)
+        val tvTime = view.findViewById<View>(R.id.tv_duration) as TextView
+        tvTime.text = getNumberFromText(duration)
+        val iconGenerator = IconGenerator(context)
+        iconGenerator.setContentView(view)
+        iconGenerator.setBackground(ColorDrawable(Color.TRANSPARENT))
+        return iconGenerator.makeIcon()
+    }
+
+    private fun getNumberFromText(duration: String): String {
+        return duration.substring(0, duration.indexOf(" "))
     }
 }

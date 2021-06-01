@@ -42,4 +42,5 @@
     <string name="acsii_code">■</string>
     <string name="language_example">English</string>
     <string name="pickup_hint">Any pickup notes?</string>
+    <string name="min_per_away">MIN\nAWAY</string>
 </resources>

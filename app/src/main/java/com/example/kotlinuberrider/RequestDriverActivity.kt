@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
@@ -79,6 +80,17 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
     private val desiredSecondsPerOnePull360Spin = 40
 
     private var lastDriverCall: DriverGeo?= null
+
+    //driverOldPos
+    private var driverOldPosition: String = ""
+    private var handler: Handler?= null
+    private var v = 0f
+    private var lat = 0.0
+    private var lng = 0.0
+    private var index = 0
+    private var next = 0
+    private var start: LatLng?= null
+    private var end: LatLng?= null
 
     override fun onStart() {
         if (!EventBus.getDefault().isRegistered(this)){
@@ -182,6 +194,7 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             findNearbyDriver(selectedPlaceEvent!!)
         }
     }
+
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onDriverAcceptTripEvent(event: DriverAcceptTripEvent) {
         FirebaseDatabase.getInstance()
@@ -203,15 +216,89 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                             .build()
                         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                        //load driver avatar
-                        Glide.with(this@RequestDriverActivity)
-                            .load(tripPlan!!.driverInfo!!.avatar)
-                            .into(driverInfoBinding.circularIvDriver)
-                        driverInfoBinding.tvDriverName.text = tripPlan.driverInfo!!.firstName
-                        confirmPickupBinding.cvConfirmPickup.visibility = View.GONE
-                        confirmUberBinding.cvConfirmUber.visibility = View.GONE
-                        driverInfoBinding.cvDriverInfo.visibility = View.VISIBLE
+                        //get routes
+                        val driverLocation = StringBuilder()
+                            .append(tripPlan!!.currentLat)
+                            .append(",")
+                            .append(tripPlan.currentLng)
+                            .toString()
 
+                        compositeDisposable.add(
+                            googleApi.getDirection("driving",
+                            "less_driving",
+                            tripPlan.origin,
+                            driverLocation,
+                            getString(R.string.google_api_key))
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe{
+                                    var blackPolylineOptions: PolylineOptions?= null
+                                    var polylineList: List<LatLng?>?= null
+                                    var blackPolyline: Polyline?= null
+                                    try {
+                                        val jsonObject = JSONObject(it)
+                                        val jsonArray = jsonObject.getJSONArray("routes")
+                                        for (i in 0 until jsonArray.length()) {
+                                            val route = jsonArray.getJSONObject(i)
+                                            val poly = route.getJSONObject("overview_polyline")
+                                            val polyline = poly.getString("points")
+                                            polylineList = Common.decodePoly(polyline)
+                                        }
+
+                                        blackPolylineOptions = PolylineOptions()
+                                        blackPolylineOptions.color(Color.BLACK)
+                                        blackPolylineOptions.width(5f)
+                                        blackPolylineOptions.startCap(SquareCap())
+                                        blackPolylineOptions.jointType(JointType.ROUND)
+                                        blackPolylineOptions.addAll(polylineList!!)
+                                        blackPolyline = mMap.addPolyline(blackPolylineOptions)
+
+                                        val latLngBound = LatLngBounds.Builder()
+                                            .include(selectedPlaceEvent!!.origin)
+                                            .include(selectedPlaceEvent!!.destination)
+                                            .build()
+                                        // add car icon for origin
+                                        val objects = jsonArray.getJSONObject(0)
+                                        val legs = objects.getJSONArray("legs")
+                                        val legsObject = legs.getJSONObject(0)
+                                        val time = legsObject.getJSONObject("duration")
+                                        val duration = time.getString("text")
+
+                                        val origin = LatLng(
+                                            tripPlan.origin!!.split(",")[0].toDouble(),
+                                            tripPlan.origin!!.split(",")[1].toDouble()
+                                        )
+                                        val destination = LatLng(
+                                            tripPlan.currentLat, tripPlan.currentLng
+                                        )
+                                        val latLngBounds = LatLngBounds.Builder()
+                                            .include(origin)
+                                            .include(destination)
+                                            .build()
+
+                                        addPickupMarkerWithDuration(duration, origin)
+                                        addDriverMarker(destination)
+
+                                        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBound, 160))
+                                        mMap.moveCamera(CameraUpdateFactory.zoomTo(mMap.cameraPosition.zoom-1))
+
+                                        initDriverForMoving(event.tripId, tripPlan)
+
+                                        //load driver avatar
+                                        Glide.with(this@RequestDriverActivity)
+                                            .load(tripPlan.driverInfo!!.avatar)
+                                            .into(driverInfoBinding.circularIvDriver)
+                                        driverInfoBinding.tvDriverName.text = tripPlan.driverInfo!!.firstName
+                                        confirmPickupBinding.cvConfirmPickup.visibility = View.GONE
+                                        confirmUberBinding.cvConfirmUber.visibility = View.GONE
+                                        driverInfoBinding.cvDriverInfo.visibility = View.VISIBLE
+
+                                    } catch (e: IOException) {
+                                        Toast.makeText(this@RequestDriverActivity,
+                                            e.message!!, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        )
                     } else {
                         Snackbar.make(binding.rlRequestDriver, getString(R.string.trips_not_found),
                             Snackbar.LENGTH_LONG).show()
@@ -355,6 +442,138 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         destinationMarker = mMap.addMarker(MarkerOptions().icon(
             BitmapDescriptorFactory.fromBitmap(icon)).position(selectedPlaceEvent!!.destination))
     }
+
+    private fun addPickupMarkerWithDuration(duration: String, origin: LatLng) {
+        val icon = Common.createIconWithDuration(this@RequestDriverActivity, duration)!!
+        originMarker = mMap.addMarker(MarkerOptions().icon(
+            BitmapDescriptorFactory.fromBitmap(icon)).position(origin)
+        )
+    }
+
+    private fun addDriverMarker(destination: LatLng) {
+        destinationMarker = mMap.addMarker(MarkerOptions()
+            .position(destination)
+            .flat(true)
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
+        )
+    }
+
+    private fun initDriverForMoving(tripId: String, tripPlan: TripPlan) {
+        driverOldPosition = StringBuilder()
+            .append(tripPlan.currentLat)
+            .append(",")
+            .append(tripPlan.currentLng)
+            .toString()
+
+        FirebaseDatabase.getInstance()
+            .getReference(Common.TRIP)
+            .child(tripId)
+            .addValueEventListener(object: ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val newData = snapshot.getValue(TripPlan::class.java)
+                    val driverNewPosition = StringBuilder()
+                        .append(newData!!.currentLat)
+                        .append(",")
+                        .append(newData.currentLng)
+                        .toString()
+
+                    //if not equal
+                    if(driverOldPosition != driverNewPosition){
+                        moveMarkerAnimation(destinationMarker!!, driverOldPosition, driverNewPosition)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Snackbar.make(binding.rlRequestDriver, error.message,Snackbar.LENGTH_LONG).show()
+                }
+            })
+    }
+
+
+    private fun moveMarkerAnimation(marker: Marker, from: String, to: String) {
+        compositeDisposable.add(
+            googleApi.getDirection("driving",
+                "less_driving",
+                from,
+                to,
+                getString(R.string.google_api_key))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe{
+                    try {
+                        val jsonObject = JSONObject(it)
+                        val jsonArray = jsonObject.getJSONArray("routes")
+                        for (i in 0 until jsonArray.length()) {
+                            val route = jsonArray.getJSONObject(i)
+                            val poly = route.getJSONObject("overview_polyline")
+                            val polyline = poly.getString("points")
+                            polylineList = Common.decodePoly(polyline)
+                        }
+
+                        blackPolylineOptions = PolylineOptions()
+                        blackPolylineOptions!!.color(Color.BLACK)
+                        blackPolylineOptions!!.width(5f)
+                        blackPolylineOptions!!.startCap(SquareCap())
+                        blackPolylineOptions!!.jointType(JointType.ROUND)
+                        blackPolylineOptions!!.addAll(polylineList!!)
+                        blackPolyline = mMap.addPolyline(blackPolylineOptions!!)
+
+                        val latLngBound = LatLngBounds.Builder()
+                            .include(selectedPlaceEvent!!.origin)
+                            .include(selectedPlaceEvent!!.destination)
+                            .build()
+                        // add car icon for origin
+                        val objects = jsonArray.getJSONObject(0)
+                        val legs = objects.getJSONArray("legs")
+                        val legsObject = legs.getJSONObject(0)
+                        val time = legsObject.getJSONObject("duration")
+                        val duration = time.getString("text")
+
+                        val bitmap = Common.createIconWithDuration(this@RequestDriverActivity, duration)
+                        originMarker!!.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap!!))
+
+                        //moving
+                        val runnable = object:Runnable{
+                            override fun run() {
+                                if (index < polylineList!!.size - 2) {
+                                    index++
+                                    next = index + 1
+                                    start = polylineList!![index]
+                                    end = polylineList!![next]
+                                }
+                                val valueAnimator = ValueAnimator.ofInt(0,1)
+                                valueAnimator.duration = 1500
+                                valueAnimator.interpolator = LinearInterpolator()
+                                valueAnimator.addUpdateListener { it ->
+                                    v = it.animatedFraction
+                                    lat = v*end!!.latitude+(1-v)*start!!.latitude
+                                    lng = v*end!!.longitude+(1-v)*end!!.longitude
+                                    val newPosition = LatLng(lat, lng)
+                                    marker.position = newPosition
+                                    marker.setAnchor(0.5f, 0.5f)
+                                    marker.rotation = Common.getBearing(start!!, newPosition)
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLng(newPosition))
+                                }
+                                valueAnimator.start()
+                                if (index < polylineList!!.size - 2) {
+                                    handler!!.postDelayed(this, 1500)
+                                }
+                            }
+                        }
+                        handler = Handler()
+                        index = -1
+                        next = 1
+                        handler!!.postDelayed(runnable, 1500)
+                        driverOldPosition = to
+
+                    } catch (e: IOException) {
+                        Toast.makeText(this@RequestDriverActivity,
+                            e.message!!, Toast.LENGTH_SHORT).show()
+                    }
+                }
+        )
+    }
+
 
     private fun setDataPickup() {
         confirmPickupBinding.tvAddressPickup.text = if(tvOriginAddress != null)
