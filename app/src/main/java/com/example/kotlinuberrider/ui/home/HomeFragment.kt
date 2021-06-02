@@ -114,7 +114,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
 
         initViews(root)
         initData()
-
         return root
     }
 
