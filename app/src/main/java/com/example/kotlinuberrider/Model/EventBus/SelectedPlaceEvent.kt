@@ -3,7 +3,7 @@ package com.example.kotlinuberrider.Model.EventBus
 import com.google.android.gms.maps.model.LatLng
 import java.lang.StringBuilder
 
-class SelectedPlaceEvent(var origin: LatLng, var destination: LatLng) {
+class SelectedPlaceEvent(var origin: LatLng, var destination: LatLng, var address: String) {
     val originString: String
     get() = StringBuilder()
         .append(origin.latitude)

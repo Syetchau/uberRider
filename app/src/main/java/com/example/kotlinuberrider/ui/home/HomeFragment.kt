@@ -2,7 +2,6 @@ package com.example.kotlinuberrider.ui.home
 
 import android.Manifest
 import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
@@ -311,7 +310,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                         val origin = LatLng(it.latitude, it.longitude)
                         val destination = LatLng(place.latLng!!.latitude, place.latLng!!.longitude)
                         startActivity(Intent(requireContext(), RequestDriverActivity::class.java))
-                        EventBus.getDefault().postSticky(SelectedPlaceEvent(origin, destination))
+                        EventBus.getDefault().postSticky(
+                            SelectedPlaceEvent(origin, destination, place.address!!))
                     }
             }
 

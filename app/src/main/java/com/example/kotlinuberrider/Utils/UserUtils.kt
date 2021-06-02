@@ -1,6 +1,7 @@
 package com.example.kotlinuberrider.Utils
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
 import android.widget.Toast
@@ -88,7 +89,7 @@ object UserUtils {
                         notificationData[Common.PICKUP_LOCATION_STRING] =
                             selectedPlaceEvent.originString
 
-                        notificationData[Common.DESTINATION_LOCATION] = destinationLocationString
+                        notificationData[Common.DESTINATION_LOCATION] = selectedPlaceEvent.address
                         notificationData[Common.DESTINATION_LOCATION_STRING] =
                             selectedPlaceEvent.destinationString
 
