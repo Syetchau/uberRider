@@ -53,6 +53,7 @@ object Common {
     const val REQUEST_DRIVER_ACCEPT: String = "Accept"
     const val TRIP_KEY: String = "TripKey"
     const val TRIP: String = "Trips"
+    const val REQUEST_DRIVER_DECLINE_AND_REMOVE_TRIP: String = "DeclineAndRemoveTrip"
 
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")

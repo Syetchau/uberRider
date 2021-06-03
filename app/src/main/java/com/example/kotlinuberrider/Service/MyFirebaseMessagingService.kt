@@ -1,6 +1,7 @@
 package com.example.kotlinuberrider.Service
 
 import com.example.kotlinuberrider.Common.Common
+import com.example.kotlinuberrider.Model.EventBus.DeclineRequestAndRemoveTripFromDriverEvent
 import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
 import com.example.kotlinuberrider.Utils.UserUtils
@@ -30,6 +31,9 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
                     }
                     data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_ACCEPT) -> {
                         EventBus.getDefault().postSticky(DriverAcceptTripEvent(data[Common.TRIP_KEY]!!))
+                    }
+                    data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_DECLINE_AND_REMOVE_TRIP) -> {
+                        EventBus.getDefault().postSticky(DeclineRequestAndRemoveTripFromDriverEvent())
                     }
                     else -> {
                         Common.showNotification(

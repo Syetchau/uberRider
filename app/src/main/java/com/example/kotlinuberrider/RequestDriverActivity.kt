@@ -8,6 +8,7 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
@@ -17,6 +18,7 @@ import com.bumptech.glide.Glide
 import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Model.DriverGeo
+import com.example.kotlinuberrider.Model.EventBus.DeclineRequestAndRemoveTripFromDriverEvent
 import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
 import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
 import com.example.kotlinuberrider.Model.TripPlan
@@ -110,6 +112,9 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         if (EventBus.getDefault().hasSubscriberForEvent(DriverAcceptTripEvent::class.java)){
             EventBus.getDefault().removeStickyEvent(DriverAcceptTripEvent::class.java)
         }
+        if (EventBus.getDefault().hasSubscriberForEvent(DeclineRequestAndRemoveTripFromDriverEvent::class.java)){
+            EventBus.getDefault().removeStickyEvent(DeclineRequestAndRemoveTripFromDriverEvent::class.java)
+        }
         EventBus.getDefault().unregister(this)
         super.onStop()
     }
@@ -192,6 +197,16 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         if (lastDriverCall != null) {
             Common.driversFound[lastDriverCall!!.key]!!.isDecline = true
             findNearbyDriver(selectedPlaceEvent!!)
+        }
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onDeclineAndRemoveTripReceivedEvent(event: DeclineRequestAndRemoveTripFromDriverEvent) {
+        if (lastDriverCall != null) {
+            if (Common.driversFound[lastDriverCall!!.key] != null) {
+                Common.driversFound[lastDriverCall!!.key]!!.isDecline = true
+            }
+            finish()
         }
     }
 
@@ -471,18 +486,23 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             .addValueEventListener(object: ValueEventListener{
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val newData = snapshot.getValue(TripPlan::class.java)
-                    val driverNewPosition = StringBuilder()
-                        .append(newData!!.currentLat)
-                        .append(",")
-                        .append(newData.currentLng)
-                        .toString()
+                    if (newData != null) {
+                        val driverNewPosition = StringBuilder()
+                            .append(newData.currentLat)
+                            .append(",")
+                            .append(newData.currentLng)
+                            .toString()
 
-                    //if not equal
-                    if(driverOldPosition != driverNewPosition){
-                        moveMarkerAnimation(destinationMarker!!, driverOldPosition, driverNewPosition)
+                        //if not equal
+                        if (driverOldPosition != driverNewPosition) {
+                            moveMarkerAnimation(
+                                destinationMarker!!,
+                                driverOldPosition,
+                                driverNewPosition
+                            )
+                        }
                     }
                 }
-
                 override fun onCancelled(error: DatabaseError) {
                     Snackbar.make(binding.rlRequestDriver, error.message,Snackbar.LENGTH_LONG).show()
                 }
