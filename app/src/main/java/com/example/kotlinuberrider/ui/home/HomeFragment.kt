@@ -34,6 +34,7 @@ import com.example.kotlinuberrider.R
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
 import com.example.kotlinuberrider.RequestDriverActivity
+import com.example.kotlinuberrider.Utils.LocationUtils
 import com.example.kotlinuberrider.databinding.FragmentHomeBinding
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
@@ -379,12 +380,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                         previousLocation = locationResult.lastLocation
                         currentLocation = locationResult.lastLocation
 
-                        setRestrictPlacesInCountry(locationResult.lastLocation)
                         firstTime = false
                     } else {
                         previousLocation = currentLocation
                         currentLocation = locationResult.lastLocation
                     }
+
+                    setRestrictPlacesInCountry(locationResult.lastLocation)
+
                     if (previousLocation!!.distanceTo(currentLocation) / 1000 <= limitRange) {
                         loadAvailableDrivers()
                     }
@@ -432,16 +435,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                 Snackbar.make(requireView(), e.message!!, Snackbar.LENGTH_SHORT).show()
             }
             .addOnSuccessListener { location ->
-                val geoCoder = Geocoder(requireContext(), Locale.getDefault())
-                val addressList: List<Address>
-                try {
-                    addressList = geoCoder.getFromLocation(location.latitude, location.longitude, 1)
-                    if (addressList.isNotEmpty()) {
-                        cityName = addressList[0].locality
-                    }
 
-                    //query
-                    if(!TextUtils.isEmpty(cityName)) {
+                cityName = LocationUtils.getAddressFromLocation(requireContext(), location)
+                if (!TextUtils.isEmpty(cityName)) {
                         val driversLocationRef = FirebaseDatabase.getInstance()
                             .getReference(Common.DRIVERS_LOCATION_REFERENCE)
                             .child(cityName)
@@ -529,13 +525,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                                 ).show()
                             }
                         })
-                    } else{
-                        Snackbar.make(requireView(), getString(R.string.city_name_not_found),
-                            Snackbar.LENGTH_SHORT).show()
-                    }
-                } catch (e: IOException){
-                    Snackbar.make(requireView(), getString(R.string.permission_required),
-                        Snackbar.LENGTH_SHORT).show()
+                } else {
+                    Snackbar.make(requireView(), getString(R.string.city_name_not_found),
+                        Snackbar.LENGTH_LONG).show()
                 }
             }
     }
