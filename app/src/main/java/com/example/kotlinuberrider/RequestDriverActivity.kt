@@ -16,11 +16,8 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.example.kotlinuberrider.Common.Common
-import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Model.DriverGeo
-import com.example.kotlinuberrider.Model.EventBus.DeclineRequestAndRemoveTripFromDriverEvent
-import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
-import com.example.kotlinuberrider.Model.EventBus.SelectedPlaceEvent
+import com.example.kotlinuberrider.Model.EventBus.*
 import com.example.kotlinuberrider.Model.TripPlan
 import com.example.kotlinuberrider.Remote.GoogleApi
 import com.example.kotlinuberrider.Remote.RetrofitClient
@@ -46,6 +43,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
 import java.io.IOException
+import kotlin.random.Random
 
 class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -114,6 +112,9 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         if (EventBus.getDefault().hasSubscriberForEvent(DeclineRequestAndRemoveTripFromDriverEvent::class.java)){
             EventBus.getDefault().removeStickyEvent(DeclineRequestAndRemoveTripFromDriverEvent::class.java)
+        }
+        if (EventBus.getDefault().hasSubscriberForEvent(DriverCompleteTripEvent::class.java)){
+            EventBus.getDefault().removeStickyEvent(DriverCompleteTripEvent::class.java)
         }
         EventBus.getDefault().unregister(this)
         super.onStop()
@@ -324,6 +325,17 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                    Snackbar.make(binding.rlRequestDriver, error.message, Snackbar.LENGTH_LONG).show()
                 }
             })
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    fun onDriverCompleteTripEvent(event: DriverCompleteTripEvent) {
+        Common.showNotification(
+            this, Random.nextInt(),
+            "Thank you",
+            "Your trip " + event.tripId + "has been completed",
+            null
+        )
+        finish()
     }
 
     private fun initData() {

@@ -54,6 +54,7 @@ object Common {
     const val TRIP_KEY: String = "TripKey"
     const val TRIP: String = "Trips"
     const val REQUEST_DRIVER_DECLINE_AND_REMOVE_TRIP: String = "DeclineAndRemoveTrip"
+    const val RIDER_REQUEST_COMPLETE_TRIP: String = "RequestCompleteTripToRider"
 
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")

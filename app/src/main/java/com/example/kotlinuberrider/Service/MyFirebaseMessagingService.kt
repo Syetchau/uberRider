@@ -4,6 +4,7 @@ import com.example.kotlinuberrider.Common.Common
 import com.example.kotlinuberrider.Model.EventBus.DeclineRequestAndRemoveTripFromDriverEvent
 import com.example.kotlinuberrider.Model.EventBus.DeclineRequestFromDriverEvent
 import com.example.kotlinuberrider.Model.EventBus.DriverAcceptTripEvent
+import com.example.kotlinuberrider.Model.EventBus.DriverCompleteTripEvent
 import com.example.kotlinuberrider.Utils.UserUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -34,6 +35,10 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
                     }
                     data[Common.NOTIFICATION_TITLE].equals(Common.REQUEST_DRIVER_DECLINE_AND_REMOVE_TRIP) -> {
                         EventBus.getDefault().postSticky(DeclineRequestAndRemoveTripFromDriverEvent())
+                    }
+                    data[Common.NOTIFICATION_TITLE].equals(Common.RIDER_REQUEST_COMPLETE_TRIP) -> {
+                        val tripKey = data[Common.TRIP_KEY]
+                        EventBus.getDefault().postSticky(DriverCompleteTripEvent(tripKey!!))
                     }
                     else -> {
                         Common.showNotification(

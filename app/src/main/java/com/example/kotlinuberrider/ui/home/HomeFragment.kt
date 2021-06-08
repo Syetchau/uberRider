@@ -99,6 +99,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
     private val compositeDisposable = CompositeDisposable()
     private lateinit var googleApi: GoogleApi
 
+    private var isNextLaunch: Boolean = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -130,6 +132,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
     override fun onStop() {
         compositeDisposable.clear()
         super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(isNextLaunch) {
+            loadAvailableDrivers()
+        } else {
+            isNextLaunch = true
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
