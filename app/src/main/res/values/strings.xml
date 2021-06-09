@@ -43,4 +43,6 @@
     <string name="language_example">English</string>
     <string name="pickup_hint">Any pickup notes?</string>
     <string name="min_per_away">MIN\nAWAY</string>
+    <string name="distance">Distance</string>
+    <string name="duration">Travel duration</string>
 </resources>

@@ -427,8 +427,14 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                     val legsObject = legs.getJSONObject(0)
                     val time = legsObject.getJSONObject("duration")
                     val duration = time.getString("text")
+                    val distance = legsObject.getJSONObject("distance")
+                    val distanceText = distance.getString("text")
                     val startAddress = legsObject.getString("start_address")
                     val endAddress = legsObject.getString("end_address")
+
+                    //set value
+                    confirmUberBinding.tvDistanceShow.text = distanceText
+                    confirmUberBinding.tvTimeShow.text = duration
 
                     addOriginMarker(duration, startAddress)
                     addDestinationMarker(endAddress)

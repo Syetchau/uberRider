@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cv_confirm_uber"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -39,6 +40,74 @@
                 android:textColor="#737373"
                 android:textSize="16sp"
                 android:fontFamily="@font/uber_move"/>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:foreground="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+           <androidx.appcompat.widget.AppCompatTextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_gravity="center_vertical"
+               android:text="@string/distance"
+               android:textColor="#737373"
+               android:textSize="16sp"
+               android:fontFamily="@font/uber_move"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_distance_show"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:textColor="#737373"
+                android:textSize="16sp"
+                android:fontFamily="@font/uber_move"
+                tools:text="10km"/>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:foreground="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/duration"
+                android:textColor="#737373"
+                android:textSize="16sp"
+                android:fontFamily="@font/uber_move"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_time_show"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:textColor="#737373"
+                android:textSize="16sp"
+                android:fontFamily="@font/uber_move"
+                tools:text="30 minutes"/>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 
