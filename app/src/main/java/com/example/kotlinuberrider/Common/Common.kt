@@ -55,6 +55,12 @@ object Common {
     const val TRIP: String = "Trips"
     const val REQUEST_DRIVER_DECLINE_AND_REMOVE_TRIP: String = "DeclineAndRemoveTrip"
     const val RIDER_REQUEST_COMPLETE_TRIP: String = "RequestCompleteTripToRider"
+    const val RIDER_DISTANCE_TEXT: String = "DistanceRider"
+    const val RIDER_DISTANCE_VALUE: String = "DistanceValueRider"
+    const val RIDER_DURATION_TEXT: String = "DurationRider"
+    const val RIDER_DURATION_VALUE: String = "DurationValueRider"
+    const val RIDER_TOTAL_FEE: String = "TotalFeeRider"
+    const val BASE_FARE: Double = 2.0  //baseFare
 
     fun buildWelcomeMessage(): String {
         return StringBuilder("Welcome, ")
@@ -205,5 +211,13 @@ object Common {
 
     private fun getNumberFromText(duration: String): String {
         return duration.substring(0, duration.indexOf(" "))
+    }
+
+    fun calculateFeeBasedOnMetres(metres: Int): Double {
+        return if (metres <= 1000) {
+            BASE_FARE
+        } else {
+            (BASE_FARE/1000)* metres
+        }
     }
 }

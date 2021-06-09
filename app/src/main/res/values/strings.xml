@@ -44,5 +44,5 @@
     <string name="pickup_hint">Any pickup notes?</string>
     <string name="min_per_away">MIN\nAWAY</string>
     <string name="distance">Distance</string>
-    <string name="duration">Travel duration</string>
+    <string name="total_fee">Total fee</string>
 </resources>

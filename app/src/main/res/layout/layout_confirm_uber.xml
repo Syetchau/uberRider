@@ -93,13 +93,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="@string/duration"
+                android:text="@string/total_fee"
                 android:textColor="#737373"
                 android:textSize="16sp"
                 android:fontFamily="@font/uber_move"/>
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tv_time_show"
+                android:id="@+id/tv_fee"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -107,7 +107,7 @@
                 android:textColor="#737373"
                 android:textSize="16sp"
                 android:fontFamily="@font/uber_move"
-                tools:text="30 minutes"/>
+                tools:text="2 sgd"/>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 

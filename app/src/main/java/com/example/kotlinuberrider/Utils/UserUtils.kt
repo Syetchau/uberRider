@@ -23,6 +23,7 @@ import com.google.firebase.database.ValueEventListener
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.selects.select
 import java.lang.StringBuilder
 
 object UserUtils {
@@ -86,12 +87,17 @@ object UserUtils {
                         notificationData[Common.RIDER_KEY] = FirebaseAuth.getInstance().currentUser!!.uid
 
                         notificationData[Common.PICKUP_LOCATION] = pickupLocationString
-                        notificationData[Common.PICKUP_LOCATION_STRING] =
-                            selectedPlaceEvent.originString
+                        notificationData[Common.PICKUP_LOCATION_STRING] = selectedPlaceEvent.originAddress
 
-                        notificationData[Common.DESTINATION_LOCATION] = selectedPlaceEvent.address
-                        notificationData[Common.DESTINATION_LOCATION_STRING] =
-                            selectedPlaceEvent.destinationString
+                        notificationData[Common.DESTINATION_LOCATION] = selectedPlaceEvent.destinationAddress
+                        notificationData[Common.DESTINATION_LOCATION_STRING] = selectedPlaceEvent.destinationString
+
+                        //add new information
+                        notificationData[Common.RIDER_DISTANCE_TEXT] = selectedPlaceEvent.distanceText
+                        notificationData[Common.RIDER_DISTANCE_VALUE] = selectedPlaceEvent.distanceValue.toString()
+                        notificationData[Common.RIDER_DURATION_TEXT] = selectedPlaceEvent.durationText
+                        notificationData[Common.RIDER_DURATION_VALUE] = selectedPlaceEvent.durationValue.toString()
+                        notificationData[Common.RIDER_TOTAL_FEE] = selectedPlaceEvent.totalFee.toString()
 
                         val fcmData = FCMSendData(tokenModel!!.token, notificationData)
                         compositeDisposable.add(fcmService.sendNotification(fcmData)!!

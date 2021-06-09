@@ -322,7 +322,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback, FirebaseDriverInfoListener 
                         val destination = LatLng(place.latLng!!.latitude, place.latLng!!.longitude)
                         startActivity(Intent(requireContext(), RequestDriverActivity::class.java))
                         EventBus.getDefault().postSticky(
-                            SelectedPlaceEvent(origin, destination, place.address!!))
+                            SelectedPlaceEvent(origin, destination, "", place.address!!))
                     }
             }
 

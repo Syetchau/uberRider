@@ -427,14 +427,32 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
                     val legsObject = legs.getJSONObject(0)
                     val time = legsObject.getJSONObject("duration")
                     val duration = time.getString("text")
+                    val durationValue = time.getInt("value")
                     val distance = legsObject.getJSONObject("distance")
                     val distanceText = distance.getString("text")
+                    val distanceValue = distance.getInt("value")
                     val startAddress = legsObject.getString("start_address")
                     val endAddress = legsObject.getString("end_address")
+                    val startLocation = legsObject.getJSONObject("start_location")
+                    val endLocation = legsObject.getJSONObject("end_location")
 
                     //set value
                     confirmUberBinding.tvDistanceShow.text = distanceText
-                    confirmUberBinding.tvTimeShow.text = duration
+                    selectedPlaceEvent.originAddress = startAddress
+                    selectedPlaceEvent.destinationAddress = endAddress
+                    selectedPlaceEvent.origin = LatLng(startLocation.getDouble("lat"),
+                        startLocation.getDouble("lng"))
+                    selectedPlaceEvent.destination = LatLng(endLocation.getDouble("lat"),
+                        endLocation.getDouble("lng"))
+                    selectedPlaceEvent.durationValue = durationValue
+                    selectedPlaceEvent.distanceValue = distanceValue
+                    selectedPlaceEvent.durationText = duration
+                    selectedPlaceEvent.distanceText = distanceText
+
+                    //calculate fee
+                    val fee = Common.calculateFeeBasedOnMetres(distanceValue)
+                    selectedPlaceEvent.totalFee = fee
+                    confirmUberBinding.tvFee.text = StringBuilder("$").append(fee)
 
                     addOriginMarker(duration, startAddress)
                     addDestinationMarker(endAddress)
