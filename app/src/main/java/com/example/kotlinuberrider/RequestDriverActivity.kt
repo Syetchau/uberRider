@@ -1,6 +1,7 @@
 package com.example.kotlinuberrider
 
 import android.animation.ValueAnimator
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -8,7 +9,6 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
@@ -335,6 +335,8 @@ class RequestDriverActivity : AppCompatActivity(), OnMapReadyCallback {
             "Your trip " + event.tripId + "has been completed",
             null
         )
+        startActivity(Intent(this, TripDetailActivity::class.java))
+        EventBus.getDefault().postSticky(LoadTripDetailEvent(event.tripId))
         finish()
     }
 

@@ -45,4 +45,9 @@
     <string name="min_per_away">MIN\nAWAY</string>
     <string name="distance">Distance</string>
     <string name="total_fee">Total fee</string>
+    <string name="trip_detail">Trip Detail</string>
+    <string name="receipt">Receipt</string>
+    <string name="uber_x_receipt">Uber X receipt</string>
+    <string name="base_fare">Base Fare</string>
+    <string name="duration">Duration</string>
 </resources>
